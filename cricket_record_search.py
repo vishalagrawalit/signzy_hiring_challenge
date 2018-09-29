@@ -11,7 +11,11 @@ allowed_teams = ['afghanistan', 'australia', 'bangladesh', 'england', 'india', '
                  'scotland', 'united arab emirates', 'hong kong', 'oman', 'bermuda', 'swwitzerland',
                  'east africa', 'west africa', 'cuba', 'windies']
 
-def search_for_internnational_series(year, input_team):
+global win_count, losses_count, drawn_count, tie_count
+win_count, losses_count, drawn_count, tie_count = 0, 0, 0, 0
+
+
+def search_for_international_series(year):
     url = "https://www.cricbuzz.com/cricket-scorecard-archives/" + year
 
     page = requests.get(url)
@@ -22,7 +26,7 @@ def search_for_internnational_series(year, input_team):
 
     international_series = [data[i]['href'] for i in range(len(data))]
 
-    check_for_bilateral_or_tournament(international_series, input_team)
+    return international_series
 
 
 def check_for_bilateral_or_tournament(international_series, input_team):
@@ -45,7 +49,7 @@ def check_for_bilateral_or_tournament(international_series, input_team):
 
 
 def calculate_win_or_loss(teams, input_team, url):
-    win_count, losses_count, drawn_count, tie_count = 0, 0, 0, 0
+    global win_count, losses_count, drawn_count, tie_count
     if input_team in teams and len(teams)==2:
         result_url = "https://www.cricbuzz.com" + str(url)
         page = requests.get(result_url)
@@ -75,9 +79,24 @@ input_team = input()
 
 input_team = input_team.lower() # Convert it into Lower Case to handle exceptions.
 
-search_for_internnational_series(year, input_team)
+series = search_for_international_series(year)
+
+thread_1 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[:len(series)//4], input_team))
+thread_2 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[len(series)//4 + 1:2*len(series)//4], input_team))
+thread_3 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[2*len(series)//4 + 1:3*len(series)//4], input_team))
+thread_4 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[3*len(series)//4 + 1:], input_team))
+
+thread_1.start()
+thread_2.start()
+thread_3.start()
+thread_4.start()
+
+thread_1.join()
+thread_2.join()
+thread_3.join()
+thread_4.join()
+
 
 end_time = time.time()
 
 print(end_time - start_time)
-
