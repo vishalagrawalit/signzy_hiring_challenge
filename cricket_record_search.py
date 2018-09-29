@@ -14,7 +14,6 @@ allowed_teams = ['afghanistan', 'australia', 'bangladesh', 'england', 'india', '
 global win_count, losses_count, drawn_count, tie_count
 win_count, losses_count, drawn_count, tie_count = 0, 0, 0, 0
 
-
 def search_for_international_series(year):
     url = "https://www.cricbuzz.com/cricket-scorecard-archives/" + year
 
@@ -69,34 +68,56 @@ def calculate_win_or_loss(teams, input_team, url):
             else:
                 losses_count+=1
 
-        print(data)
-        print(win_count, losses_count, drawn_count, tie_count)
+        # print(data)
+        # print(win_count, losses_count, drawn_count, tie_count)
 
-print("Enter the year- ")
-year = input()
-print("Enter the Team- ")
-input_team = input()
+def table(input_team, year):
+    columns = ["Team", "Year", "Wins", "Losses", "Draws", "Tie"]
+    relation = PrettyTable(columns)
+    relation.add_row([input_team, year, win_count, losses_count, drawn_count, tie_count])
 
-input_team = input_team.lower() # Convert it into Lower Case to handle exceptions.
-
-series = search_for_international_series(year)
-
-thread_1 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[:len(series)//4], input_team))
-thread_2 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[len(series)//4 + 1:2*len(series)//4], input_team))
-thread_3 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[2*len(series)//4 + 1:3*len(series)//4], input_team))
-thread_4 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[3*len(series)//4 + 1:], input_team))
-
-thread_1.start()
-thread_2.start()
-thread_3.start()
-thread_4.start()
-
-thread_1.join()
-thread_2.join()
-thread_3.join()
-thread_4.join()
+    return relation
 
 
-end_time = time.time()
+def main():
+    print("Enter the year- ")
+    year = input()
+    print("Enter the Team- ")
+    input_team = input()
 
-print(end_time - start_time)
+    input_team = input_team.lower()  # Convert it into Lower Case to handle exceptions.
+
+    if 1900<=int(year)<=2018:
+        if input_team in allowed_teams:
+            print("Wait while the program is scraping Cricbuzz.")
+        else:
+            print("No data Found")
+            return 1
+    else:
+        print("Please Enter the year between 1900 to 2018.")
+        return 1
+
+    series = search_for_international_series(year)
+
+    thread_1 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[:len(series)//4], input_team))
+    thread_2 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[len(series)//4 + 1:2*len(series)//4], input_team))
+    thread_3 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[2*len(series)//4 + 1:3*len(series)//4], input_team))
+    thread_4 = threading.Thread(target=check_for_bilateral_or_tournament, args=(series[3*len(series)//4 + 1:], input_team))
+
+    thread_1.start()
+    thread_2.start()
+    thread_3.start()
+    thread_4.start()
+
+    thread_1.join()
+    thread_2.join()
+    thread_3.join()
+    thread_4.join()
+
+    if not thread_1.isAlive() and not thread_2.isAlive() and not thread_3.isAlive() and not thread_4.isAlive():
+        print(table(input_team, year))
+
+
+if __name__ == '__main__':
+    main()
+
